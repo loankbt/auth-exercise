@@ -2,25 +2,34 @@ const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const User = require('../models/user.model')
 
-router.route('/').get((req, res) => {
+// get all users
+router.route('/users').get((req, res) => {
     User.find()
-        .then(user => res.json(user))
+        .then(users => res.status(200).json({
+            status: "OK",
+            message: "Get all users successfully.",
+            total: users.length,
+            items: users
+        }))
         .catch(err => res.status(400).json('Error: ' + err))
 })
 
-// handle request of creating new user
-router.route('/create').post((req, res) => {
+// create new user
+router.route('/user').post((req, res) => {
     // encrypt plain-text password
     const hashed = bcrypt.hashSync(req.body.password, 10);
 
-    // create new user
     const user = new User({
         email: req.body.email,
         password: hashed
     })
 
     user.save()
-        .then(() => res.json('User created!'))
+        .then(() => res.status(201).json({
+            status: "OK",
+            message: "Create user successfully.",
+            item: user
+        }))
         .catch(err => res.status(400).json('Error: ' + err))
 })
 

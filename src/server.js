@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const session = require('express-session')
 const passport = require('passport')
+const flash = require('connect-flash');
 
 require('dotenv').config()
 
@@ -24,17 +25,19 @@ connection.once('open', () => {
 
 // routes
 const userRouter = require('./routes/user')
-const authRouter = require('./routes/authenticate')
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use('/user', userRouter)
-app.use('/', authRouter)
+const authRouter = require('./routes/auth')
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(session({ secret: 'passport', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
+app.use(flash());
+
+// passport
+app.use(passport.initialize())
+app.use(passport.session())
+
+app.use('/api', userRouter)
+app.use('/api/auth', authRouter)
 
 app.listen(port, () => {
     console.log(`Server is running on port: ${port}`)

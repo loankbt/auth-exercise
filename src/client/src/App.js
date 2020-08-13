@@ -1,35 +1,29 @@
-import React, { Component } from 'react'
+import React, { useState } from 'react'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
-
-import logo from './logo.svg'
+import Home from './components/Home'
+import Login from './components/Login'
+import Register from './components/Register'
 import './App.css'
+import { AuthContext } from './context/auth'
 
-export default class App extends Component {
-  constructor(props) {
-    super(props)
-    this.state = { user: [] }
+function App(props) {
+  const existingTokens = JSON.parse(localStorage.getItem("tokens"));
+  const [authTokens, setAuthTokens] = useState(existingTokens);
+
+  const setTokens = (data) => {
+    localStorage.setItem("tokens", JSON.stringify(data));
+    setAuthTokens(data);
   }
 
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-        </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-        </a>
-        </header>
-      </div>
-    )
-  };
+  return (
+    <AuthContext.Provider value={{ authTokens, setAuthTokens: setTokens }}>
+      <Router>
+        <Route exact path="/" component={Home} />
+        <Route path="/register" component={Register} />
+        <Route path="/login" component={Login} />
+      </Router>
+    </AuthContext.Provider>
+  )
 }
 
-export default App;
+export default App
