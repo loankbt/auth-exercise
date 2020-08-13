@@ -4,6 +4,7 @@ const User = require('../models/user.model')
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 passport.use(new LocalStrategy({ usernameField: 'email' },
     function (email, password, done) {
@@ -25,6 +26,41 @@ passport.use(new LocalStrategy({ usernameField: 'email' },
         });
     }
 ))
+
+// Use the GoogleStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and Google
+//   profile), and invoke a callback with a user object.
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "google/callback"
+},
+    function (accessToken, refreshToken, profile, done) {
+        User.findOrCreate({ id: profile.id }, function (err, user) {
+            return done(err, user);
+        });
+    }
+));
+
+// GET /auth/google
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  The first step in Google authentication will involve
+//   redirecting the user to google.com.  After authorization, Google
+//   will redirect the user back to this application at /auth/google/callback
+router.get('/google',
+    passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+
+// GET /auth/google/callback
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  If authentication fails, the user will be redirected back to the
+//   login page.  Otherwise, the primary route function function will be called,
+//   which, in this example, will redirect the user to the home page.
+router.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    function (req, res) {
+        res.redirect('/');
+    });
 
 // passport.use('register', new LocalStrategy(
 //     {
@@ -60,7 +96,7 @@ passport.deserializeUser((id, done) => {
 })
 
 // handle login request
-router.post('/login', 
+router.post('/login',
     passport.authenticate('local', { failureFlash: true }),
     (req, res) => {
         const email = req.user.email;
@@ -98,7 +134,9 @@ router.post('/register', (req, res) => {
         .catch(err => res.status(400).json('Error: ' + err))
 })
 
-// request to test redirect after log in successfully
+
+
+// request to home page
 router.get('/', (req, res) => {
     var token = req.headers['x-access-token'];
 
