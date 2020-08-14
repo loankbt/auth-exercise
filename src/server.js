@@ -4,14 +4,21 @@ const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const session = require('express-session')
 const passport = require('passport')
-const flash = require('connect-flash');
 
 require('dotenv').config()
 
 const app = express()
 const port = process.env.PORT || 5000
 
-app.use(cors())
+app.use(cors());
+// app.use(
+//     cors({
+//         origin: "http://localhost:5000", // allow to server to accept request from different origin
+//         methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//         credentials: true // allow session cookie from browser to pass through
+//     })
+// );
+
 app.use(express.json())
 
 // configure mongoose
@@ -30,7 +37,6 @@ const authRouter = require('./routes/auth')
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(session({ secret: 'passport', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
-app.use(flash());
 
 // passport
 app.use(passport.initialize())

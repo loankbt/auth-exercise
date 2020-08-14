@@ -12,6 +12,7 @@ export default class Login extends Component {
 
         this.handleChange = this.handleChange.bind(this)
         this.handleSumbit = this.handleSumbit.bind(this)
+        this.handleGoogle = this.handleGoogle.bind(this);
     }
 
     componentDidMount() {
@@ -21,6 +22,20 @@ export default class Login extends Component {
                 password: this.props.location.state.password
             })
         }
+    }
+
+    handleGoogle(event) {
+        event.preventDefault();
+
+        axios.get('/api/auth/google')
+            .then(res => {
+                if (res.data) {
+                    console.log(res.data);
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            })
     }
 
     handleChange(event) {
@@ -64,7 +79,7 @@ export default class Login extends Component {
         let error;
 
         if (this.state.err.length !== 0) {
-            error = <p style={{color: "red"}}>{this.state.err}</p>;
+            error = <p style={{ color: "red" }}>{this.state.err}</p>;
         }
 
         return (
@@ -84,6 +99,13 @@ export default class Login extends Component {
                 <Button variant="primary" type="submit">
                     Log in
                 </Button>
+
+                <Form.Group>
+                    <Button onClick={this.handleGoogle}>Google</Button>
+                    {/* <Link to="/api/auth/google">
+                        Sign in with Google
+                    </Link> */}
+                </Form.Group>
 
                 <Form.Group>
                     <Form.Label>

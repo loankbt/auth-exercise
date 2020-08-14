@@ -12,7 +12,7 @@ export default class Home extends Component {
     }
 
     componentDidMount() {
-        axios.get('http://localhost:5000/api/auth/',
+        axios.get('/api/auth/',
             {
                 headers: { 'x-access-token': JSON.parse(localStorage.getItem('jwt')) }
             })

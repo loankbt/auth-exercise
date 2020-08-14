@@ -23,7 +23,7 @@ export default class Login extends Component {
     handleSumbit(event) {
         event.preventDefault()
 
-        axios.post('http://localhost:5000/api/auth/register', {
+        axios.post('/api/auth/register', {
             email: this.state.email,
             password: this.state.password
         })

@@ -1,10 +1,11 @@
 const router = require('express').Router()
 const passport = require('passport')
 const User = require('../models/user.model')
-const LocalStrategy = require('passport-local').Strategy;
+    , LocalStrategy = require('passport-local').Strategy
+    , GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
+    , FacebookStrategy = require('passport-facebook').Strategy;
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
-const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 passport.use(new LocalStrategy({ usernameField: 'email' },
     function (email, password, done) {
@@ -27,21 +28,78 @@ passport.use(new LocalStrategy({ usernameField: 'email' },
     }
 ))
 
-// Use the GoogleStrategy within Passport.
-//   Strategies in Passport require a `verify` function, which accept
-//   credentials (in this case, an accessToken, refreshToken, and Google
-//   profile), and invoke a callback with a user object.
+// GoogleStrategy
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "google/callback"
+    callbackURL: "http://localhost:5000/api/auth/google/callback"
 },
     function (accessToken, refreshToken, profile, done) {
-        User.findOrCreate({ id: profile.id }, function (err, user) {
-            return done(err, user);
+        User.findOne({ googleId: profile.id }, function (err, user) {
+
+            if (err) {
+                return (err);
+            }
+
+            if (!user) {
+                let user = new User({
+                    googleId: profile.id,
+                    email: profile.displayName,
+                    password: profile.displayName
+                });
+
+                console.log(user);
+                user.save();
+
+                return done(null, user);
+            }
+
+            return done(null, user);
         });
     }
 ));
+
+// FacebookStrategy
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: "http://www.example.com/api/auth/facebook/callback"
+},
+    function (accessToken, refreshToken, profile, done) {
+        console.log(profile);
+
+        User.findOne({ facebookId: profile.id }, function (err, user) {
+
+            if (err) {
+                return (err);
+            }
+
+            if (!user) {
+                let user = new User({
+                    facebookId: profile.id,
+                    email: profile.displayName,
+                    password: profile.displayName
+                });
+
+                console.log(user);
+                user.save();
+
+                return done(null, user);
+            }
+
+            return done(null, user);
+        });
+    }
+));
+
+router.get('/facebook', passport.authenticate('facebook'));
+
+router.get('/facebook/callback',
+    passport.authenticate('facebook', {
+        successRedirect: '/success',
+        failureRedirect: '/error'
+    }));
+
 
 // GET /auth/google
 //   Use passport.authenticate() as route middleware to authenticate the
@@ -49,18 +107,25 @@ passport.use(new GoogleStrategy({
 //   redirecting the user to google.com.  After authorization, Google
 //   will redirect the user back to this application at /auth/google/callback
 router.get('/google',
-    passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+    passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // GET /auth/google/callback
 //   Use passport.authenticate() as route middleware to authenticate the
 //   request.  If authentication fails, the user will be redirected back to the
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
-router.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login' }),
+router.get('/google/callback',
+    passport.authenticate('google', { failureRedirect: '/api/auth/error' }),
     function (req, res) {
-        res.redirect('/');
+        console.log(res);
+
+        // res.send(req.headers);
+
+        res.redirect('/api/auth/success');
     });
+
+router.get('/success', (req, res) => res.send('success'));
+router.get('/error', (req, res) => res.send('error'));
 
 // passport.use('register', new LocalStrategy(
 //     {
@@ -111,7 +176,6 @@ router.post('/login',
             token: token
         }
 
-
         res.send(user);
     },
 )
@@ -133,8 +197,6 @@ router.post('/register', (req, res) => {
         }))
         .catch(err => res.status(400).json('Error: ' + err))
 })
-
-
 
 // request to home page
 router.get('/', (req, res) => {
