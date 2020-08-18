@@ -1,18 +1,22 @@
-import React, { Component } from 'react'
-import Form from 'react-bootstrap/Form'
-import Button from 'react-bootstrap/Button'
-import axios from 'axios'
-import { Link } from 'react-router-dom'
+import React, { Component } from 'react';
+import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
+import Container from 'react-bootstrap/Container';
+
+import '../css/Style.css';
 
 export default class Login extends Component {
     constructor(props) {
-        super(props)
+        super(props);
 
-        this.state = { email: '', password: '', err: [] }
+        this.state = { loggedIn: false, email: '', password: '', err: [] };
 
-        this.handleChange = this.handleChange.bind(this)
-        this.handleSumbit = this.handleSumbit.bind(this)
-        this.handleGoogle = this.handleGoogle.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSumbit = this.handleSumbit.bind(this);
+        this.loginGoogle = this.loginGoogle.bind(this);
+        this.loginFacebook = this.loginFacebook.bind(this);
     }
 
     componentDidMount() {
@@ -20,58 +24,48 @@ export default class Login extends Component {
             this.setState({
                 email: this.props.location.state.email,
                 password: this.props.location.state.password
-            })
+            });
         }
     }
 
-    handleGoogle(event) {
+    loginGoogle(event) {
         event.preventDefault();
+        window.open('http://localhost:5000/api/auth/google');
+    }
 
-        axios.get('/api/auth/google')
-            .then(res => {
-                if (res.data) {
-                    console.log(res.data);
-                }
-            })
-            .catch(err => {
-                console.log(err);
-            })
+    loginFacebook(event) {
+        event.preventDefault();
+        window.open('http://localhost:5000/api/auth/facebook');
     }
 
     handleChange(event) {
-        let nam = event.target.name
-        let val = event.target.value
-        this.setState({ [nam]: val })
+        let nam = event.target.name;
+        let val = event.target.value;
+        this.setState({ [nam]: val });
     }
 
     handleSumbit(event) {
-        event.preventDefault()
-
+        event.preventDefault();
         axios.post('/api/auth/login', {
             email: this.state.email,
             password: this.state.password
         })
             .then(res => {
                 if (res.data) {
-                    console.log(res.data)
+                    console.log(res.data);
 
                     this.setState({
                         loggedIn: true,
                         user: res.data
-                    })
+                    });
 
-                    window.localStorage.setItem('jwt', JSON.stringify(res.data.token))
                     this.props.history.push('/');
-                } else {
-                    console.log('Error!')
                 }
             })
             .catch(err => {
                 this.setState({
                     err: 'Invalid email or password.'
                 });
-
-                console.log(err);
             })
     }
 
@@ -83,36 +77,35 @@ export default class Login extends Component {
         }
 
         return (
-            <Form onSubmit={this.handleSumbit}>
-                <Form.Group controlId="formBasicEmail">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control type="email" name="email" value={this.state.email} onChange={this.handleChange} placeholder="Enter email" required />
-                </Form.Group>
+            <Container className="container">
+                <Form onSubmit={this.handleSumbit}>
+                    <Form.Group controlId="formBasicEmail">
+                        <Form.Label>Email</Form.Label>
+                        <Form.Control type="email" name="email" value={this.state.email} onChange={this.handleChange} placeholder="Enter email" required />
+                    </Form.Group>
 
-                <Form.Group controlId="formBasicPassword">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control type="password" name="password" value={this.state.password} onChange={this.handleChange} placeholder="Password" required />
-                </Form.Group>
+                    <Form.Group controlId="formBasicPassword">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control type="password" name="password" value={this.state.password} onChange={this.handleChange} placeholder="Password" required />
+                    </Form.Group>
 
-                {error}
+                    {error}
 
-                <Button variant="primary" type="submit">
-                    Log in
-                </Button>
+                    <Form.Group>
+                    </Form.Group>
 
-                <Form.Group>
-                    <Button onClick={this.handleGoogle}>Google</Button>
-                    {/* <Link to="/api/auth/google">
-                        Sign in with Google
-                    </Link> */}
-                </Form.Group>
-
-                <Form.Group>
-                    <Form.Label>
-                        Haven't had an account? <Link to='/register'>Register</Link>
-                    </Form.Label>
-                </Form.Group>
-            </Form>
+                    <Form.Group>
+                        <Button type="submit">Log in</Button>
+                        <Form.Label className="login-choice"> or using </Form.Label>
+                        <Button className="login-button" onClick={this.loginGoogle}>Google</Button>
+                        <Button className="login-button" onClick={this.loginFacebook}>Facebook</Button></Form.Group>
+                    <Form.Group>
+                        <Form.Label>
+                            Haven't had an account? <Link to='/register'>Register</Link>
+                        </Form.Label>
+                    </Form.Group>
+                </Form>
+            </Container>
         )
     }
 }

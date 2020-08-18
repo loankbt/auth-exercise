@@ -1,9 +1,17 @@
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
+const User = require('../models/user.model');
+const LocalStrategy = require('passport-local').Strategy
+    , GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
+    , FacebookStrategy = require('passport-facebook').Strategy;
 
-const User = require('../models/user.model')
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser((id, done) => {
+    done(null, User.findOne({ id: id }));
+});
 
-passport.use(new LocalStrategy(
+// local strategy using email & password
+passport.use(new LocalStrategy({ usernameField: 'email' },
     function (email, password, done) {
         User.findOne({ email: email }, function (err, user) {
 
@@ -15,16 +23,69 @@ passport.use(new LocalStrategy(
                 return done(null, false, { message: 'Incorrect email.' });
             }
 
-            // if (!bcrypt.compareSync(password, user.password)) {
-            //     return done(null, false, { message: 'Incorrect password.' });
-            // }
+            if (!bcrypt.compareSync(password, user.password)) {
+                return done(null, false, { message: 'Incorrect password.' });
+            }
 
             return done(null, user);
         });
     }
-))
+));
 
-passport.serializeUser((user, done) => done(null, user.id))
-passport.deserializeUser((id, done) => {
-    done(null, User.findOne({ id: id }))
-})
+// GoogleStrategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:5000/api/auth/google/callback"
+},
+    function (accessToken, refreshToken, profile, done) {
+        User.findOne({ googleId: profile.id }, function (err, user) {
+
+            if (err) {
+                return (err);
+            }
+
+            if (!user) {
+                let user = new User({
+                    googleId: profile.id,
+                    name: profile.displayName,
+                });
+
+                user.save();
+
+                return done(null, user);
+            }
+
+            return done(null, user);
+        });
+    }
+));
+
+// FacebookStrategy
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: "http://localhost:5000/api/auth/facebook/callback"
+},
+    function (accessToken, refreshToken, profile, done) {
+        User.findOne({ facebookId: profile.id }, function (err, user) {
+
+            if (err) {
+                return (err);
+            }
+
+            if (!user) {
+                let user = new User({
+                    facebookId: profile.id,
+                    name: profile.displayName
+                });
+
+                user.save();
+
+                return done(null, user);
+            }
+
+            return done(null, user);
+        });
+    }
+));

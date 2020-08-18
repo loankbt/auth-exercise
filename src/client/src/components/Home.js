@@ -1,62 +1,58 @@
-import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
-import axios from 'axios'
+import React, { Component } from 'react';
+import axios from 'axios';
+import Container from 'react-bootstrap/Container';
 
 export default class Home extends Component {
     constructor(props) {
-        super(props)
+        super(props);
 
-        this.state = { email: '' };
-
+        this.state = { loggedIn: false, name: '' };
         this.logOut = this.logOut.bind(this);
     }
 
     componentDidMount() {
-        axios.get('/api/auth/',
-            {
-                headers: { 'x-access-token': JSON.parse(localStorage.getItem('jwt')) }
-            })
+        axios.get('/api/auth/')
             .then(res => {
                 if (res.data) {
                     this.setState({
                         loggedIn: true,
-                        email: res.data.id
-                    })
-                } else {
-                    console.log('Error!')
+                        name: res.data.email
+                    });
                 }
             })
             .catch(err => {
-                console.log(err)
+                console.log(err);
             })
     }
 
     logOut() {
-        this.setState({
-            loggedIn: false
-        })
-
-        localStorage.removeItem('jwt');
+        axios.get('/api/auth/logout')
+            .then(res => {
+                this.setState({
+                    loggedIn: false
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
         this.props.history.push('/login');
     }
 
     render() {
-        let item;
-
-        if (!localStorage.getItem('jwt')) {
-            item = <Redirect to='/login' />
-        } else {
-            item =
-                <div>
-                    <p>Hello, {this.state.email}</p>
-                    <button type="submit" onClick={this.logOut}>Log out</button>
-                </div>
-        }
-
         return (
-            <div>
-                {item}
-            </div>
+            <Container className="container">
+                {!this.state.loggedIn ?
+                    (<div>
+                        <p>You haven't logged in.</p>
+                        <a href='/login'>
+                            <button className="btn btn-primary" type="submit" onClick={this.logOut}>Log in</button>
+                        </a>
+                    </div>) :
+                    (<div className="loggedIn">
+                        <p>Hello, {this.state.name}</p>
+                        <button className="btn btn-warning" type="submit" onClick={this.logOut}>Log out</button>
+                    </div>)}
+            </Container>
         )
     }
 }

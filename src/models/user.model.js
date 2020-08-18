@@ -1,11 +1,15 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
+    name: {
+        type: String,
+        minlength: 5,
+        maxlength: 255
+    },
     email: {
         type: String,
-        required: true,
         minlength: 5,
         maxlength: 255,
         trim: true,
@@ -13,7 +17,6 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
         minlength: 5,
         maxlength: 255
     }
@@ -23,6 +26,6 @@ const userSchema = new Schema({
         timestamps: true,
     })
 
-const User = mongoose.model('User', userSchema)
+const User = mongoose.model('User', userSchema);
 
-module.exports = User
+module.exports = User;
