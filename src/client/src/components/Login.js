@@ -51,9 +51,7 @@ export default class Login extends Component {
             password: this.state.password
         })
             .then(res => {
-                if (res.data) {
-                    console.log(res.data);
-
+                if (res.data.user) {
                     this.setState({
                         loggedIn: true,
                         user: res.data

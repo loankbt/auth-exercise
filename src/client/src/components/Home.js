@@ -13,10 +13,10 @@ export default class Home extends Component {
     componentDidMount() {
         axios.get('/api/auth/')
             .then(res => {
-                if (res.data) {
+                if (res.data.user) {
                     this.setState({
                         loggedIn: true,
-                        name: res.data.email
+                        name: res.data.user.name
                     });
                 }
             })

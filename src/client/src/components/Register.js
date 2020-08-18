@@ -29,8 +29,6 @@ export default class Login extends Component {
             password: this.state.password
         })
             .then(res => {
-                console.log(res.data.error);
-
                 if (res.data.user) {
                     this.setState({
                         registed: true

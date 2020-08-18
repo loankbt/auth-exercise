@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
@@ -25,27 +24,23 @@ connection.once('open', () => {
     console.log('MongoDB database connection established successfully!');
 });
 
-// routes
-const userRouter = require('./routes/user');
-const authRouter = require('./routes/auth');
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-// app.use(session({ secret: 'passport', cookie: { maxAge: 30 * 60 * 1000 }, resave: false, saveUninitialized: false }));
 app.use(session({
     secret: "secret",
     resave: false,
     saveUninitialized: false,
     store: new MongoStore({
-        mongooseConnection: mongoose.connection,
-        ttl: 24 * 60 * 60
+        mongooseConnection: connection,
+        ttl: 10
     })
-}))
+}));
 
-// passport
+// passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
+// routes
+const userRouter = require('./routes/user');
+const authRouter = require('./routes/auth');
 app.use('/api', userRouter);
 app.use('/api/auth', authRouter);
 

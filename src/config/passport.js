@@ -20,11 +20,11 @@ passport.use(new LocalStrategy({ usernameField: 'email' },
             }
 
             if (!user) {
-                return done(null, false, { message: 'Incorrect email.' });
+                return done('Incorrect email');
             }
 
             if (!bcrypt.compareSync(password, user.password)) {
-                return done(null, false, { message: 'Incorrect password.' });
+                return done('Incorrect password');
             }
 
             return done(null, user);
@@ -40,20 +40,20 @@ passport.use(new GoogleStrategy({
 },
     function (accessToken, refreshToken, profile, done) {
         User.findOne({ googleId: profile.id }, function (err, user) {
-
             if (err) {
                 return (err);
             }
 
             if (!user) {
-                let user = new User({
+                let newUser = new User({
                     googleId: profile.id,
+                    email: '',
                     name: profile.displayName,
                 });
 
-                user.save();
+                newUser.save();
 
-                return done(null, user);
+                return done(null, newUser);
             }
 
             return done(null, user);
@@ -69,20 +69,20 @@ passport.use(new FacebookStrategy({
 },
     function (accessToken, refreshToken, profile, done) {
         User.findOne({ facebookId: profile.id }, function (err, user) {
-
             if (err) {
                 return (err);
             }
 
             if (!user) {
-                let user = new User({
+                let newUser = new User({
                     facebookId: profile.id,
-                    name: profile.displayName
+                    email: '',
+                    name: profile.displayName,
                 });
 
-                user.save();
+                newUser.save();
 
-                return done(null, user);
+                return done(null, newUser);
             }
 
             return done(null, user);
